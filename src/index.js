@@ -1,9 +1,12 @@
 import database from "./database.json";
 
+const DISCOUNT_PERCENTAGE = 0.5;
+const DISCOUNT_THRESHOLD = 3;
+const DISCOUNT_AMOUNT = 5;
+
 export const checkout = (productIDs = []) => {
   const products = database.products;
   const discounts = {};
-  const threshold = 3;
 
   const cartItems = productIDs.map((id, index) => {
     const { name, price } = products[id];
@@ -17,14 +20,14 @@ export const checkout = (productIDs = []) => {
     };
   });
 
-  if (cartItems.length < threshold) {
+  if (cartItems.length < DISCOUNT_THRESHOLD) {
     cartItems.forEach((item, index) => {
       const { id } = item;
 
       if (discounts[id] === undefined) {
         discounts[id] = index;
       } else {
-        item.finalPrice *= 0.5;
+        item.finalPrice *= DISCOUNT_PERCENTAGE;
       }
     });
   } else {
@@ -33,14 +36,13 @@ export const checkout = (productIDs = []) => {
 
       if (discounts[id] === undefined) {
         discounts[id] = index;
-        item.finalPrice -= 5;
+        item.finalPrice -= DISCOUNT_AMOUNT;
       } else if (discounts[id] !== -1) {
-        const discountedItem = cartItems[discounts[id]];
-        discountedItem.finalPrice += 5;
-        item.finalPrice *= 0.5;
+        cartItems[discounts[id]].finalPrice += DISCOUNT_AMOUNT;
+        item.finalPrice *= DISCOUNT_PERCENTAGE;
         discounts[id] = -1;
       } else {
-        item.finalPrice -= 5;
+        item.finalPrice -= DISCOUNT_AMOUNT;
       }
     });
   }

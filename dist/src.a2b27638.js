@@ -151,11 +151,13 @@ Object.defineProperty(exports, "__esModule", {
 exports.checkout = void 0;
 var _database = _interopRequireDefault(require("./database.json"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var DISCOUNT_PERCENTAGE = 0.5;
+var DISCOUNT_THRESHOLD = 3;
+var DISCOUNT_AMOUNT = 5;
 var checkout = function checkout() {
   var productIDs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var products = _database.default.products;
   var discounts = {};
-  var threshold = 3;
   var cartItems = productIDs.map(function (id, index) {
     var _products$id = products[id],
       name = _products$id.name,
@@ -168,13 +170,13 @@ var checkout = function checkout() {
       finalPrice: price
     };
   });
-  if (cartItems.length < threshold) {
+  if (cartItems.length < DISCOUNT_THRESHOLD) {
     cartItems.forEach(function (item, index) {
       var id = item.id;
       if (discounts[id] === undefined) {
         discounts[id] = index;
       } else {
-        item.finalPrice *= 0.5;
+        item.finalPrice *= DISCOUNT_PERCENTAGE;
       }
     });
   } else {
@@ -182,14 +184,13 @@ var checkout = function checkout() {
       var id = item.id;
       if (discounts[id] === undefined) {
         discounts[id] = index;
-        item.finalPrice -= 5;
+        item.finalPrice -= DISCOUNT_AMOUNT;
       } else if (discounts[id] !== -1) {
-        var discountedItem = cartItems[discounts[id]];
-        discountedItem.finalPrice += 5;
-        item.finalPrice *= 0.5;
+        cartItems[discounts[id]].finalPrice += DISCOUNT_AMOUNT;
+        item.finalPrice *= DISCOUNT_PERCENTAGE;
         discounts[id] = -1;
       } else {
-        item.finalPrice -= 5;
+        item.finalPrice -= DISCOUNT_AMOUNT;
       }
     });
   }
@@ -240,7 +241,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49472" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62394" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
