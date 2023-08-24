@@ -2,51 +2,53 @@ import database from "./database.json";
 
 export const checkout = (productIDs = []) => {
   const products = database.products;
-  const cartItems = [];
-
-  for (const id of productIDs) {
-    const { name, price } = products[id];
-    cartItems.push({ id, name, price });
-  }
-
   const discounts = {};
   const threshold = 3;
 
-  for (let index = 0; index < cartItems.length; index++) {
-    const item = cartItems[index];
-    const { id } = item;
+  const cartItems = productIDs.map((id, index) => {
+    const { name, price } = products[id];
 
-    if (cartItems.length < threshold) {
+    return {
+      index: index + 1,
+      id,
+      name,
+      originalPrice: price,
+      finalPrice: price,
+    };
+  });
+
+  if (cartItems.length < threshold) {
+    cartItems.forEach((item, index) => {
+      const { id } = item;
+
       if (discounts[id] === undefined) {
         discounts[id] = index;
       } else {
-        item.price *= 0.5;
+        item.finalPrice *= 0.5;
       }
-    } else {
+    });
+  } else {
+    cartItems.forEach((item, index) => {
+      const { id } = item;
+
       if (discounts[id] === undefined) {
         discounts[id] = index;
-        item.price -= 5;
+        item.finalPrice -= 5;
       } else if (discounts[id] !== -1) {
-        item.price *= 0.5;
-        cartItems[discounts[id]].price += 5;
+        const discountedItem = cartItems[discounts[id]];
+        discountedItem.finalPrice += 5;
+        item.finalPrice *= 0.5;
         discounts[id] = -1;
       } else {
-        item.price -= 5;
+        item.finalPrice -= 5;
       }
-    }
+    });
   }
 
-  const cart = cartItems.map((item, index) => ({
-    index: index + 1,
-    id: item.id,
-    name: item.name,
-    originalPrice: products[item.id].price,
-    finalPrice: item.price
-  }));
-
-  const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
-
-  return { cart, totalPrice };
+  return {
+    cart: cartItems,
+    totalPrice: cartItems.reduce((total, item) => total + item.finalPrice, 0),
+  };
 };
 
 const result = checkout(["003", "002", "003", "003", "004"]);

@@ -151,71 +151,53 @@ Object.defineProperty(exports, "__esModule", {
 exports.checkout = void 0;
 var _database = _interopRequireDefault(require("./database.json"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 var checkout = function checkout() {
   var productIDs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
   var products = _database.default.products;
-  var cartItems = [];
-  var _iterator = _createForOfIteratorHelper(productIDs),
-    _step;
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var _id = _step.value;
-      var _products$_id = products[_id],
-        name = _products$_id.name,
-        price = _products$_id.price;
-      cartItems.push({
-        id: _id,
-        name: name,
-        price: price
-      });
-    }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
   var discounts = {};
   var threshold = 3;
-  for (var index = 0; index < cartItems.length; index++) {
-    var item = cartItems[index];
-    var id = item.id;
-    if (cartItems.length < threshold) {
-      if (discounts[id] === undefined) {
-        discounts[id] = index;
-      } else {
-        item.price *= 0.5;
-      }
-    } else {
-      if (discounts[id] === undefined) {
-        discounts[id] = index;
-        item.price -= 5;
-      } else if (discounts[id] !== -1) {
-        item.price *= 0.5;
-        cartItems[discounts[id]].price += 5;
-        discounts[id] = -1;
-      } else {
-        item.price -= 5;
-      }
-    }
-  }
-  var cart = cartItems.map(function (item, index) {
+  var cartItems = productIDs.map(function (id, index) {
+    var _products$id = products[id],
+      name = _products$id.name,
+      price = _products$id.price;
     return {
       index: index + 1,
-      id: item.id,
-      name: item.name,
-      originalPrice: products[item.id].price,
-      finalPrice: item.price
+      id: id,
+      name: name,
+      originalPrice: price,
+      finalPrice: price
     };
   });
-  var totalPrice = cartItems.reduce(function (total, item) {
-    return total + item.price;
-  }, 0);
+  if (cartItems.length < threshold) {
+    cartItems.forEach(function (item, index) {
+      var id = item.id;
+      if (discounts[id] === undefined) {
+        discounts[id] = index;
+      } else {
+        item.finalPrice *= 0.5;
+      }
+    });
+  } else {
+    cartItems.forEach(function (item, index) {
+      var id = item.id;
+      if (discounts[id] === undefined) {
+        discounts[id] = index;
+        item.finalPrice -= 5;
+      } else if (discounts[id] !== -1) {
+        var discountedItem = cartItems[discounts[id]];
+        discountedItem.finalPrice += 5;
+        item.finalPrice *= 0.5;
+        discounts[id] = -1;
+      } else {
+        item.finalPrice -= 5;
+      }
+    });
+  }
   return {
-    cart: cart,
-    totalPrice: totalPrice
+    cart: cartItems,
+    totalPrice: cartItems.reduce(function (total, item) {
+      return total + item.finalPrice;
+    }, 0)
   };
 };
 exports.checkout = checkout;
@@ -258,7 +240,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60222" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49472" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
